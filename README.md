@@ -7,7 +7,7 @@ A personal health dashboard you run from chat. You tell Claude what you ate, lif
 You need [Claude Code](https://claude.com/claude-code) and a Mac or Linux terminal.
 
 ```bash
-git clone <this repo's URL> arc
+git clone https://github.com/jeevankarandikar/arc.git arc
 cd arc
 claude
 ```

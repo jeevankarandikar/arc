@@ -48,6 +48,8 @@ Diet style and restrictions, allergies, foods they eat every week, whether they 
 
 Which of these they have: Apple Watch or iPhone Health data, Whoop, Oura, a smart scale, Strong or another lifting app, old notes with lifts. For each one, explain how to export it (Apple Health: Health app, profile picture, Export All Health Data, AirDrop to the Mac). Save exports to `data/` and run `tools/build_series.py` (see "Data" below). Skip anything they do not have.
 
+Also ask if they have old check-in photos or videos (camera roll, a Photos album, a folder). If they do, they do not need to move or AirDrop anything into this repo. Ask where the files are, or have them drag the folder into the chat, then run `python3 tools/physique.py add <path>` on it. See "Optional: physique photos".
+
 ### Step 6, health background (optional, offer to skip)
 
 Medications and supplements they want tracked, recent bloodwork values with dates, anything their doctor told them to watch. Put values in `LABS` and the free text in `PROFILE.md`. Say once that you are not a doctor and that medication and lab questions go to their clinician. Never recommend a medication or a dose.
@@ -119,7 +121,16 @@ Any input they do not have is passed as `none`. To add a new export on top of an
 
 ## Optional: physique photos
 
-`tools/physique.py` turns check-in videos or photos into aligned frames for the comparison view in the Looks tab (macOS only, it uses Apple's Vision). It is slow and optional. Only set it up if they ask, and read the header of the script first. The frames stay in `physique/`, which is gitignored.
+`tools/physique.py` turns check-in videos or photos into aligned frames for the comparison view in the Looks tab (macOS only, it uses Apple's Vision). It is slow and optional. Read the header of the script first.
+
+The photos can be anywhere on their Mac. Never ask them to copy or AirDrop files into this folder. Get a path from them (or a folder dragged into the chat) and run:
+
+1. `python3 tools/physique.py add <folder or files>` registers them in place, reading dates from folder or file names (a month like `2024-03` in the path wins), then the file's capture date.
+2. `python3 tools/physique.py scan` numbers the videos and makes contact sheets in `data/physique/.cache/sheets/`. Look at them yourself.
+3. Pick one front, side and back frame per month in `data/physique/picks.json` (format in the script header), then run `refine` and `build`.
+4. Check `data/physique/.cache/check.jpg` and fix any bad frame before showing them the Looks tab.
+
+Originals are never moved or edited. The frames stay in `physique/`, which is gitignored.
 
 ## Body fat
 

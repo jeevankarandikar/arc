@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Physique photos: from your videos and photos to aligned frames for the comparison view.
 
-Everything here stays on your Mac. Sources are files under data/physique/ (gitignored), plus any originals
-listed in data/physique/originals-manifest.json, which are read in place and never moved or edited.
-The output goes in physique/ at the repo root (also gitignored).
+Everything here stays on your Mac. Photos and videos can live anywhere: point `add` at a folder or files and
+they are read in place and never copied, moved or edited (the list goes in data/physique/originals-manifest.json).
+Files you drop into data/physique/ also work. The output goes in physique/ at the repo root (gitignored).
 
+    python3 tools/physique.py add PATH [PATH ...] register a folder or files from anywhere on the Mac
     python3 tools/physique.py scan [--all]       number new videos and make their contact sheets (--all redoes every one)
     python3 tools/physique.py strip N FROM TO    a closer sheet of video #N between two times, every 0.5 s
     python3 tools/physique.py refine [N ...]     move video picks to the held moment of their pose, within 2.5 s
@@ -12,7 +13,7 @@ The output goes in physique/ at the repo root (also gitignored).
 
 Picks live in data/physique/picks.json, one per month and pose:
     {"n": 12, "t": 14.5, "pose": "front"}                  a numbered video from the scan
-    {"src": "sent-sep-2026/IMG_9392.DNG", "pose": "front"}  a file under data/physique, or a manifest uuid
+    {"src": "sent-sep-2026/IMG_9392.DNG", "pose": "front"}  a file under data/physique, or an id from the manifest
 Optional keys: "manual" keeps refine away from a hand-checked time, "m" overrides the month, "rot" turns a sideways frame upright (degrees clockwise), "flip" mirrors the frame, "box" is a manual crop as fractions of
 the frame [x, y, w, h] for when pose detection misses (usually back shots), "note" shows under the photo.
 """
@@ -431,9 +432,38 @@ def build():
             print('  %s: %s crop, set a box if it looks off' % (key, how))
 
 
+def add(paths):
+    """Register photos and videos from anywhere on the Mac. Files are read in place, never copied or moved."""
+    rows = {}
+    if os.path.exists(MANIFEST):
+        rows = {r['uuid']: r for r in json.load(open(MANIFEST))}
+    n = 0
+    for p in paths:
+        p = os.path.abspath(os.path.expanduser(p))
+        found = []
+        if os.path.isdir(p):
+            for d, ds, fs in os.walk(p):
+                ds[:] = [x for x in ds if not x.startswith('.')]
+                found += [os.path.join(d, f) for f in sorted(fs) if not f.startswith('.')]
+        else:
+            found = [p]
+        for f in found:
+            if os.path.splitext(f)[1].lower() not in VIDEO | PHOTO:
+                continue
+            key = hashlib.sha1(f.encode()).hexdigest()[:12]
+            if key not in rows:
+                n += 1
+            rows[key] = {'uuid': key, 'path': f, 'date': file_date(f, f)[0], 'albums': []}
+    os.makedirs(SRC, exist_ok=True)
+    json.dump(sorted(rows.values(), key=lambda r: r['date']), open(MANIFEST, 'w'), indent=1)
+    print('%d new files registered, %d in all. Next: python3 tools/physique.py scan' % (n, len(rows)))
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
-    if cmd == 'scan':
+    if cmd == 'add':
+        add(sys.argv[2:])
+    elif cmd == 'scan':
         scan('--all' in sys.argv)
     elif cmd == 'strip':
         strip(int(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5]) if len(sys.argv) > 5 else .5)
