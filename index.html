@@ -670,7 +670,7 @@ var MEALS = {};
     bodyfat: {name: 'Body fat, scale', u: '%', agg: 'mean', type: 'line', dp: 1, sl: 'Average', note: 'Bioimpedance scale. Readings jumped between 12% and 18% from one month to the next in 2021 and 2022, so only the trend is useful.'},
     bfpic: {name: 'Body fat, photos', u: '%', agg: 'mean', type: 'line', dp: 0, sl: 'Average', note: 'Visual estimates from check-in photos or videos, one per month where one exists.'},
     steps: {name: 'Steps', u: 'steps', agg: 'mean', type: 'bar', dp: 0, sl: 'Daily average', note: 'iPhone steps from Apple Health, with the Watch or Whoop filling days the phone missed.'},
-    balance: {name: 'Energy', u: 'kcal', agg: 'mean', type: 'pair', a: 'kcal', b: 'energy', dp: 0, sl: 'Daily average', note: 'Bars are calories eaten. Dark marks are calories burned, from Whoop through Sep 10 and Apple Health on the phone after that. The balance counts days that have both.'},
+    balance: {name: 'Energy', u: 'kcal', agg: 'mean', type: 'pair', a: 'kcal', b: 'energy', dp: 0, sl: 'Daily average', note: 'Bars are calories eaten. Dark marks are calories burned, from your wearable or Apple Health. The balance counts days that have both.'},
     energy: {name: 'Burned', u: 'kcal', agg: 'mean', type: 'bar', dp: 0, sl: 'Daily average', note: 'Whoop energy burned per day.'},
     kcal: {name: 'Calories', u: 'kcal', agg: 'mean', type: 'bar', dp: 0, sl: 'Daily average', target: TARGETS.kcal, note: 'Days you logged by chat. The dashed line is the daily target.'},
     protein: {name: 'Protein', u: 'g', agg: 'mean', type: 'bar', dp: 0, sl: 'Daily average', target: TARGETS.protein, note: 'Days you logged by chat.'},
@@ -1196,7 +1196,7 @@ var MEALS = {};
     });
   }
   // Carbs, fat, sodium and potassium come from an optional fifth element on each food item:
-  // {c: carbs g, f: fat g, na: sodium mg, k: potassium mg}. Days logged before Sep 30 have none.
+  // {c: carbs g, f: fat g, na: sodium mg, k: potassium mg}.
   function nutrients(d){
     var o = {c: 0, f: 0, na: 0, k: 0, have: 0, all: 0};
     SECTIONS.forEach(function(sec){
@@ -1387,28 +1387,29 @@ var MEALS = {};
       now.innerHTML = '';
       var wk = keys('weight'), wl = wk[wk.length - 1];
       if (wl != null) now.appendChild(tile('Weight', fmt(DAY.weight[wl], 1), 'lb', short(wl), 'weight', false, spark(wk.filter(function(n){ return n > TODAY - 120; }).map(function(n){ return DAY.weight[n]; }))));
-      now.appendChild(tile('Body fat', '20–24', '%', 'goal zone 10 to 13', 'bf', false, rangeBar(22, 10, 13, 5, 35)));
+      var bm = Object.keys(MONTHLY.bf || {}).sort(), bl = bm[bm.length - 1];
+      if (bl) now.appendChild(tile('Body fat', fmt(MONTHLY.bf[bl], 0), '%', MS[+bl.slice(5, 7) - 1] + ' estimate', 'bf'));
     }
     if (week){
       var a = TODAY - 7, b = TODAY - 1;
       $('week-span').textContent = span(a, b);
       week.innerHTML = '';
       var k = avg('kcal', a, b), p = avg('protein', a, b), stp = avg('steps', a, b), ses = sum('sessions', a, b), sp = avg('sleep', a, b), dr = sum('drinks', a, b);
-      week.appendChild(tile('Calories', k ? fmt(k.v, 0) : 'None', '', 'avg a day', 'kcal', false, k ? meter(k.v / (TARGETS.kcal * 1.3), 1 / 1.3) : null));
-      week.appendChild(tile('Protein', p ? fmt(p.v, 0) : 'None', p ? 'g' : '', 'avg a day', 'protein', p && p.v < TARGETS.protein * .85, p ? meter(p.v / (TARGETS.protein * 1.3), 1 / 1.3) : null));
-      week.appendChild(tile('Steps', stp ? fmt(stp.v / 1000, 1) + 'k' : 'None', '', 'avg a day', 'steps', false, stp ? meter(stp.v / 15000, 10000 / 15000) : null));
+      week.appendChild(tile('Calories', k ? fmt(k.v, 0) : 'n/a', '', 'avg a day', 'kcal', false, k ? meter(k.v / (TARGETS.kcal * 1.3), 1 / 1.3) : null));
+      week.appendChild(tile('Protein', p ? fmt(p.v, 0) : 'n/a', p ? 'g' : '', 'avg a day', 'protein', p && p.v < TARGETS.protein * .85, p ? meter(p.v / (TARGETS.protein * 1.3), 1 / 1.3) : null));
+      week.appendChild(tile('Steps', stp ? fmt(stp.v / 1000, 1) + 'k' : 'n/a', '', 'avg a day', 'steps', false, stp ? meter(stp.v / 15000, 10000 / 15000) : null));
       week.appendChild(tile('Workouts', ses ? fmt(ses.v, 0) : '0', '', 'of 4', 'sessions', !ses || ses.v < 3, dots(ses ? ses.v : 0, 4)));
-      week.appendChild(tile('Sleep', sp ? fmt(sp.v, 1) : 'None', sp ? 'h' : '', 'avg a night', 'sleep', false, sp ? meter(sp.v / 9, 7 / 9) : null));
+      week.appendChild(tile('Sleep', sp ? fmt(sp.v, 1) : 'n/a', sp ? 'h' : '', 'avg a night', 'sleep', false, sp ? meter(sp.v / 9, 7 / 9) : null));
       week.appendChild(tile('Drink nights', dr ? fmt(dr.v, 0) : '0', '', 'of 7', 'drinks', dr && dr.v >= 3, dots(dr ? dr.v : 0, 7)));
     }
     if (sl){
       var z = TODAY - 1, y0 = TODAY - 28;
       sl.innerHTML = '';
       var sa = avg('sleep', y0, z), u6 = range('sleep', y0, z).filter(function(x){ return x < 6; }).length, rh = avg('rhr', y0, z), hv = avg('hrv', y0, z);
-      sl.appendChild(tile('Asleep', sa ? fmt(sa.v, 1) : 'None', sa ? 'h' : '', 'avg a night, goal 7', 'sleep', false, sa ? meter(sa.v / 9, 7 / 9) : null));
+      sl.appendChild(tile('Asleep', sa ? fmt(sa.v, 1) : 'n/a', sa ? 'h' : '', 'avg a night, goal 7', 'sleep', false, sa ? meter(sa.v / 9, 7 / 9) : null));
       sl.appendChild(tile('Short nights', String(u6), sa ? 'of ' + sa.n : '', 'under 6 hours', 'sleep', sa && u6 / sa.n >= .4, sa ? meter(u6 / sa.n) : null));
-      sl.appendChild(tile('Resting HR', rh ? fmt(rh.v, 0) : 'None', rh ? 'bpm' : '', '28-day avg', 'rhr', false, spark(recent('rhr', 28))));
-      sl.appendChild(tile('HRV', hv ? fmt(hv.v, 0) : 'None', hv ? 'ms' : '', 'to Sep 11', 'hrv', false, spark(recent('hrv', 40))));
+      sl.appendChild(tile('Resting HR', rh ? fmt(rh.v, 0) : 'n/a', rh ? 'bpm' : '', '28-day avg', 'rhr', false, spark(recent('rhr', 28))));
+      sl.appendChild(tile('HRV', hv ? fmt(hv.v, 0) : 'n/a', hv ? 'ms' : '', '40-day avg', 'hrv', false, spark(recent('hrv', 40))));
     }
   }
 

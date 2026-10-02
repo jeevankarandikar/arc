@@ -2,6 +2,14 @@
 
 A personal health dashboard you run from chat. You tell Claude what you ate, lifted and weighed, and it keeps one HTML page current: calories and protein, lifts and estimated 1RMs, weight and body fat, sleep, goals, labs. There is no app to type into and no server. The page is a single file you open in your browser.
 
+<p>
+  <img src="docs/today.png" width="32%" alt="The Today tab: calorie and protein rings, macros, what you ate, and goals">
+  <img src="docs/lifting.png" width="32%" alt="The Lifting tab: your program, recent sessions and strength charts">
+  <img src="docs/food.png" width="32%" alt="The Food tab: a day strip, the day's meals and a weekday plan">
+</p>
+
+The screenshots use made-up sample data.
+
 ## Start
 
 You need [Claude Code](https://claude.com/claude-code) and a Mac or Linux terminal.
