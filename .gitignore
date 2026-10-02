@@ -1,0 +1,9 @@
+# personal data: raw exports, lab PDFs, hand logs, physique photos
+data/
+physique/
+.DS_Store
+__pycache__/
+.claude/settings.local.json
+
+PROFILE.md
+.claude/
